@@ -174,7 +174,11 @@ def cmd_push(args: argparse.Namespace) -> int:
         (github_dir / "copilot-instructions.md").write_text(
             rt.transpile_copilot(), encoding="utf-8"
         )
-        print("[OK] VS Code & Copilot updated: .vscode/mcp.json, .github/copilot-instructions.md")
+        # Global Copilot skills sync
+        copilot_skills_dir = Path.home() / ".copilot" / "skills"
+        copilot_skills_dir.mkdir(parents=True, exist_ok=True)
+        sl_res = sl.sync_to_destination(copilot_skills_dir, mode=mode)
+        print(f"[OK] VS Code & Copilot updated: .vscode/mcp.json, .github/copilot-instructions.md, {sl_res['synced_count']} skills ({mode})")
 
     # 4. OpenAI Codex CLI
     if target_all or args.codex:

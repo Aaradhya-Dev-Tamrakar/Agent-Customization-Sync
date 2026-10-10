@@ -7,6 +7,7 @@ Pure standard-library implementation (argparse) with zero runtime dependencies.
 
 from __future__ import annotations
 
+import re
 import sys
 import json
 import argparse
@@ -178,7 +179,32 @@ def cmd_push(args: argparse.Namespace) -> int:
         copilot_skills_dir = Path.home() / ".copilot" / "skills"
         copilot_skills_dir.mkdir(parents=True, exist_ok=True)
         sl_res = sl.sync_to_destination(copilot_skills_dir, mode=mode)
-        print(f"[OK] VS Code & Copilot updated: .vscode/mcp.json, .github/copilot-instructions.md, {sl_res['synced_count']} skills ({mode})")
+
+        # Generate VS Code native .prompt.md slash commands
+        ws_prompts_dir = workspace / ".github" / "prompts"
+        user_prompts_dir = Path.home() / "AppData" / "Roaming" / "Code" / "User" / "prompts"
+        for pdir in [ws_prompts_dir, user_prompts_dir]:
+            pdir.mkdir(parents=True, exist_ok=True)
+        
+        prompt_count = 0
+        for sname in sl.list_source_skills():
+            sfile = skills_dir / sname / "SKILL.md"
+            if sfile.is_file():
+                txt = sfile.read_text(encoding="utf-8", errors="ignore")
+                fm_m = re.match(r"^---\s*\n(.*?)\n---\s*\n", txt, re.DOTALL)
+                desc = sname
+                body = txt
+                if fm_m:
+                    body = txt[fm_m.end():].strip()
+                    dm = re.search(r"description:\s*(.+)", fm_m.group(1))
+                    if dm:
+                        desc = dm.group(1).strip()
+                p_out = f"---\ndescription: \"{desc.replace('\"', '\'')}\"\n---\n\n{body}\n"
+                for pdir in [ws_prompts_dir, user_prompts_dir]:
+                    (pdir / f"{sname}.prompt.md").write_text(p_out, encoding="utf-8")
+                prompt_count += 1
+
+        print(f"[OK] VS Code & Copilot updated: .vscode/mcp.json, .github/copilot-instructions.md, {sl_res['synced_count']} skills ({mode}), {prompt_count} slash commands (.prompt.md)")
 
     # 4. OpenAI Codex CLI
     if target_all or args.codex:

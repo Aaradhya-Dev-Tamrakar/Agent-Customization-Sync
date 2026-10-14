@@ -95,7 +95,16 @@ REM Run drift detection and token budget audit
 
 REM View active configuration telemetry
 .\custom_sync.bat status
+
+REM One-click mirror of local Codex memory into Antigravity
+.\mirror_codex_memory.bat
 ```
+
+The memory mirror copies `~/.codex/memories/` into
+`~/.gemini/config/codex-memories/`, verifies copied files with SHA-256, then
+removes stale files from the destination. It leaves the Codex source untouched.
+Run `custom_sync.bat mirror-memory --src <path> --dest <path>` to override either
+directory.
 
 ---
 

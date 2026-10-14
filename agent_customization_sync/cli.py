@@ -19,6 +19,7 @@ from agent_customization_sync.manifest import (
     CustomizationManifest,
     sha256_file,
 )
+from agent_customization_sync.memory_mirror import mirror_memory
 from agent_customization_sync.snapshot_engine import SnapshotEngine
 from agent_customization_sync.auditor import CustomizationAuditor
 from agent_customization_sync.transpilers.rules_transpiler import RulesTranspiler
@@ -75,6 +76,26 @@ def cmd_list(args: argparse.Namespace) -> int:
         print(f"{s.snapshot_id:<34} {created_short:<20} {overhead_str:<10} {size_kb:<10}")
     print("--------------------------------------------------------------------------------\n")
     return 0
+
+
+def cmd_mirror_memory(args: argparse.Namespace) -> int:
+    try:
+        copied_count = mirror_memory(
+            source_dir=Path(args.src) if args.src else None,
+            destination_dir=Path(args.dest) if args.dest else None,
+        )
+        print("[OK] Codex memory mirrored to Antigravity")
+        print(f"  Files verified: {copied_count}")
+        destination = (
+            Path(args.dest).expanduser()
+            if args.dest
+            else Path.home() / ".gemini" / "config" / "codex-memories"
+        )
+        print(f"  Destination   : {destination}")
+        return 0
+    except Exception as exc:
+        print(f"[FAIL] Codex memory mirror failed: {exc}", file=sys.stderr)
+        return 1
 
 
 def cmd_restore(args: argparse.Namespace) -> int:
@@ -280,6 +301,13 @@ def main(argv: Optional[List[str]] = None) -> int:
     p_list = subparsers.add_parser("list", help="List all available state snapshots in ring buffer")
     p_list.add_argument("--snapshot-dir", type=str, help="Custom snapshot storage directory")
 
+    # mirror-memory
+    p_memory = subparsers.add_parser(
+        "mirror-memory", help="Mirror local Codex memories into Antigravity"
+    )
+    p_memory.add_argument("--src", type=str, help="Codex memory source directory")
+    p_memory.add_argument("--dest", type=str, help="Antigravity memory mirror directory")
+
     # restore
     p_rest = subparsers.add_parser("restore", help="Restore configuration from a designated snapshot")
     p_rest.add_argument("--id", type=str, help="Snapshot ID or substring to restore")
@@ -317,6 +345,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     commands = {
         "snapshot": cmd_snapshot,
         "list": cmd_list,
+        "mirror-memory": cmd_mirror_memory,
         "restore": cmd_restore,
         "push": cmd_push,
         "audit": cmd_audit,

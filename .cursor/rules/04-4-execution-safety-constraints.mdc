@@ -1,0 +1,17 @@
+---
+description: "4. Execution & Safety Constraints"
+globs: ["*"]
+alwaysApply: true
+---
+
+# 4. Execution & Safety Constraints
+
+- **Background Task & Subprocess Governance (`background-task-governance`)**:
+  - Automatically enforce the [`background-task-governance`](file:///C:/Users/Aaradhya/.gemini/config/skills/background-task-governance/SKILL.md) skill to prevent hung processes, freezes, or blocked subprocesses on Windows.
+  - **Zero Interactive CLIs Headlessly**: Never invoke CLI utilities that prompt for unattached stdin or confirmation without non-interactive flags (e.g., `diskpart`, interactive WSL flags, interactive formatters).
+  - **Zero Elevated UAC Headlessly**: Commands requiring administrator elevation must never be dispatched headlessly; instruct the user to run them in an external elevated terminal.
+  - **PowerShell Script-File First**: Never pass multi-pipe expressions or complex PowerShell blocks via inline `-Command "..."` strings that risk quote/pipeline mangling. Write to a `.ps1` in the scratch directory and invoke with `-ExecutionPolicy Bypass -File`.
+  - **Proactive Watchdog**: If any background task produces no output or progress for >60s, inspect process CPU/IO immediately and kill deadlocked tasks.
+- **Jupyter Notebooks**: Never run or execute `.ipynb` files headlessly via CLI commands; leave execution for Google Colab or manual runs.
+- **In-Place File Delivery**: Apply edits directly to target files in the repository using diff-precise tools; do not stage files into zip archives or external output directories unless explicitly asked.
+- **Ambiguity & Disambiguation Gate**: Execute what is explicitly instructed. If scope, repository target, or file formatting is ambiguous, ask first rather than assuming.

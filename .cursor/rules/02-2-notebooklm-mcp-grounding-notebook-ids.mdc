@@ -1,0 +1,12 @@
+---
+description: "2. NotebookLM MCP Grounding & Notebook IDs"
+globs: ["*"]
+alwaysApply: true
+---
+
+# 2. NotebookLM MCP Grounding & Notebook IDs
+
+When interacting with `super-nlm` or `notebooklm` MCP tools, reference these primary notebook IDs:
+- **Personal Notebook**: `95a79d26-2f87-42cd-8cb9-8361a1e56059` (⚙️ Aaradhya — Engineer's Personal Notebook)
+- **SPARK**: `2c00f5a4-98dc-4783-96d1-3682fa3cb516` (https://notebook.google.com/notebook/2c00f5a4-98dc-4783-96d1-3682fa3cb516)
+- **BiasAperture**: `99bee3c6-07ed-4ff0-8ac8-0027b18ad06a` (https://notebook.google.com/notebook/99bee3c6-07ed-4ff0-8ac8-0027b18ad06a)

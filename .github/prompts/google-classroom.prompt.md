@@ -16,6 +16,7 @@ Activate this skill whenever the user:
 - Asks for details, instructions, or materials for a specific assignment (e.g. *"What do I need to do for Assignment 3?"*, *"Show the rubric for the MLOps project"*).
 - Asks to check their grades, feedback, or submission status (e.g. *"Did I turn in the NLP quiz?"*, *"What was my score on the CV assignment?"*).
 - Asks for class stream announcements, teacher updates, or lecture materials.
+- Wants to copy published topics, coursework, class materials, announcements, and supported attachments between courses.
 - Wants to turn in or reclaim a submission.
 
 ---
@@ -110,3 +111,12 @@ When running diagnostics, text extraction, or reading Classroom metadata in Wind
 import sys
 sys.stdout.reconfigure(encoding='utf-8')
 ```
+
+## 📚 Copying Course Contents
+Use `copy_course_contents` from the Classroom MCP when the user asks to duplicate course materials into a course they control. The tool copies published topics, coursework, class materials, announcements, supported rubrics, and Drive attachments; it does not copy rosters, submissions, grades, or course settings.
+
+1. Run a preview first with `sourceCourseId`, `destinationCourseId`, and `driveFolderId`; `dryRun` defaults to `true`. Summarize the item counts, attachment destinations, expired due dates, and current destination student count.
+2. Apply only when the user has requested the copy, using `dryRun: false`. The tool stops if the destination is not active or has enrolled students; do not bypass that guard.
+3. Use `pastDueDatePolicy: "omit"` only when requested for expired work. Explain that those copied assignments will have no due date.
+4. The tool uses separate Drive OAuth credentials to copy attachments, deduplicates repeated files, and resumes from a local ledger. Report individual attachment or rubric failures and leave a post unpublished when a required attachment could not be copied.
+5. Treat Drive `403` or `404` responses as retrieval/permission failures. A `404` alone does not establish whether a file was deleted or is inaccessible; report the source item and exact error, and ask the user to check the file and sharing access.

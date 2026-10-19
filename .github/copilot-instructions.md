@@ -23,6 +23,12 @@ When interacting with `super-nlm` or `notebooklm` MCP tools, reference these pri
 - When any `Claude_export*.md` or exported transcript files exist in the active directory or project, read them first to inherit context before proceeding with subsequent tasks.
 
 ## 4. Execution & Safety Constraints
+- **Background Task & Subprocess Governance (`background-task-governance`)**:
+  - Automatically enforce the [`background-task-governance`](file:///C:/Users/Aaradhya/.gemini/config/skills/background-task-governance/SKILL.md) skill to prevent hung processes, freezes, or blocked subprocesses on Windows.
+  - **Zero Interactive CLIs Headlessly**: Never invoke CLI utilities that prompt for unattached stdin or confirmation without non-interactive flags (e.g., `diskpart`, interactive WSL flags, interactive formatters).
+  - **Zero Elevated UAC Headlessly**: Commands requiring administrator elevation must never be dispatched headlessly; instruct the user to run them in an external elevated terminal.
+  - **PowerShell Script-File First**: Never pass multi-pipe expressions or complex PowerShell blocks via inline `-Command "..."` strings that risk quote/pipeline mangling. Write to a `.ps1` in the scratch directory and invoke with `-ExecutionPolicy Bypass -File`.
+  - **Proactive Watchdog**: If any background task produces no output or progress for >60s, inspect process CPU/IO immediately and kill deadlocked tasks.
 - **Jupyter Notebooks**: Never run or execute `.ipynb` files headlessly via CLI commands; leave execution for Google Colab or manual runs.
 - **In-Place File Delivery**: Apply edits directly to target files in the repository using diff-precise tools; do not stage files into zip archives or external output directories unless explicitly asked.
 - **Ambiguity & Disambiguation Gate**: Execute what is explicitly instructed. If scope, repository target, or file formatting is ambiguous, ask first rather than assuming.
@@ -39,14 +45,19 @@ When interacting with `super-nlm` or `notebooklm` MCP tools, reference these pri
     4. **Verification Gate**: Enforce local test suite (`pytest`) and linting (`ruff`) clean passes before commits.
     5. **Ecosystem Synchronization**: Run all version control through `.\sync.bat -m "type(scope): summary (#id)"` (or `.\sync.ps1`).
     6. **Pull Request & Review Dispatch**: Open PR with complete sidebar metadata (`gh pr create --assignee "@me" --label "<labels>" --reviewer <teammate>`), link the issue (`Closes #<id>`), and document test proof.
+    7. **PR Merge Governance**: For collaborative/cohort repositories, require peer review sign-off. For solo project repositories, PRs can be merged directly once local verification gates and remote CI pass (`gh pr merge <id> --squash --delete-branch`).
 - **`sync.ps1` / `sync.bat` Self-Reporting & Enforcement Gate**:
   - Always check if `sync.ps1` or `sync.bat` is present in the repository root.
   - If `sync.ps1` is present: raw `git commit`, `git push`, or `git add` are strictly forbidden. All version control must run through `.\sync.bat` (or `.\sync.ps1`):
     - **Zero-Friction Wrapper**: Prefer `.\sync.bat` across Windows environments to automatically bypass PowerShell ExecutionPolicy (`Restricted`/`RemoteSigned`) on fresh clones without manual system configuration.
     - **Routine / Minor Changes**: `.\sync.bat` (or `.\sync.ps1`)
     - **Major Features / Architectural Changes**: Update tracker (e.g., `dev-logs/PortfolioWebsite_TRACKER.md` or repo tracker) first, then run `.\sync.bat -m "feat(scope): detailed summary"`.
-    - **Safe Pull Only**: `.\sync.bat -PullOnly`
-  - **Companion Guarantee**: If a repository contains `sync.ps1` but lacks `sync.bat`, create or maintain `sync.bat` as the companion entrypoint to guarantee friction-free execution across new machines.
+  - **Root Entrypoint & Companion Guarantee**:
+    - If a repository contains `sync.ps1` but lacks `sync.bat`, create or maintain `sync.bat` as the companion entrypoint to guarantee friction-free execution across new machines.
+    - If a repository organizes sync scripts under `scripts/` (e.g., `scripts/sync.ps1` and `scripts/sync.bat` in repos with root `Makefile`/`make.bat` like `BiasAperture`), a root `sync.bat` forwarder (`call "%~dp0scripts\sync.bat" %*`) **MUST** be maintained at the repository root so `.\sync.bat` works unconditionally.
+  - **Task Runner vs. VCS Engine Boundary (`Makefile` vs `sync.ps1`)**:
+    - `Makefile` / `make.bat` serves as an omnibus developer task runner for build/test routines (`make test`, `make lint`, `make verify`, `make audit`, `make clean`). Highly recommended in collaborative/fellowship repositories.
+    - `sync.ps1` / `sync.bat` remains the sole authoritative engine for version control, secret screening, diff AST analysis, automated conventional commits, and PR routing. In repositories with a `Makefile`, `make sync` delegates directly to `sync.bat`.
 - **Output Discipline**:
   - Zero conversational framing, fluff, or narrative padding. Dive straight into execution.
   - No unnecessary post-explanations of code edits unless specifically requested.
@@ -54,3 +65,9 @@ When interacting with `super-nlm` or `notebooklm` MCP tools, reference these pri
 
 ## 6. Authoritative Portfolio Repository
 - The user's authoritative portfolio repository is **`AaradhyaDT.github.io`** (`F:\AaradhyaDT\AaradhyaDT.github.io`), hosted under the personal account (`https://github.com/AaradhyaDT/AaradhyaDT.github.io`). The organization repository (`Aaradhya-Dev-Tamrakar/AaradhyaDT.github.io`) is strictly a secondary mirror. Whenever referencing, updating, or tracking the portfolio, use `F:\AaradhyaDT\AaradhyaDT.github.io` as the canonical default.
+
+
+## Codex Memory Mirror
+- A full local mirror of Codex memory is stored at `~/.gemini/config/codex-memories/`.
+- For prior decisions or user preferences, consult `codex-memories/MEMORY.md` and `codex-memories/memory_summary.md` when relevant.
+- `codex-memories/rollout_summaries/` and `codex-memories/extensions/` retain detailed historical context; consult selectively when needed.

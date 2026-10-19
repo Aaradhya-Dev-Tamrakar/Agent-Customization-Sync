@@ -16,36 +16,60 @@ When diverse inputs (arbitrary models, prediction files, demographic datasets, a
 | :--- | :--- | :--- |
 | **Harmonized** | Multiple differing backend primitives (Fairlearn group rates vs. AIF360 classification metrics) and regulatory frameworks (EU AI Act vs. NIST AI RMF) are reconciled into mathematically unified point estimates and compliance mappings. | *"Harmonized Fairness Engine cross-validating binary Core Four metrics across Fairlearn and AIF360 backends."* |
 | **Standardized** | The audit pipeline follows immutable schema contracts ($n < 30$ sample suppression, 95% BCa bootstrap CIs with $B \ge 1{,}000$, Pearson's $\chi^2$ significance tests), guaranteeing identical guarantees regardless of audited target. | *"Standardized demographic data ingestion enforcing Milestone M1 schema invariants."* |
-| **Uniform** | The visual structure, typography hierarchy, badge color semantics (`PASS` = green, `WARN` = amber, `FAIL` = red, `GUARD` = indigo), and metadata grids share the exact same styling across browser and print. | *"Uniform executive reporting with identical card geometry across all demographic axes."* |
+| **Uniform** | The visual structure, LaTeX Computer Modern typography hierarchy, 60-30-10 palette rules, badge color semantics (`PASS` = gem green, `WARN` = amber, `FAIL` = crimson, `GUARD` = indigo), and metadata grids share the exact same styling across browser and print. | *"Uniform executive reporting with identical card geometry across all demographic axes."* |
 | **Interoperable** | The report operates simultaneously as an air-gapped web dashboard, a paginated regulatory PDF filing, and machine-readable `schema.org` JSON-LD metadata. | *"Interoperable compliance dossier suitable for offline browser inspection and formal PDF filing."* |
 | **Cohesive** | Narrative descriptions, metric whiskers, surrogate explainability attributions, and datasheets fit together into a united, non-contradictory regulatory dossier. | *"Cohesive compliance documentation aligning empirical findings with Article 10 of Regulation (EU) 2024/1689."* |
 
 ---
 
-## 2. Structural Report Invariants
+## 2. LaTeX Typography & 60-30-10 Harmonized Palette
 
-Every compliance dossier produced under this skill must adhere to the following 5-section visual hierarchy:
+To preserve the intellectual gravitas and high-contrast legibility of classic LaTeX serif fonts across both web dossiers and compiled Blink PDFs, the report styling strictly implements the **60-30-10 rule**:
+
+### Palette Distribution & Roles
+1. **Dominant (60%) — Canvas & Charcoal Text**:
+   - Canvas: `#f8fafc` / `#ffffff`.
+   - Body Text: `#1e293b` (Deep Charcoal Slate) to prevent high-frequency optical vibration against thin serif strokes.
+2. **Secondary (30%) — Structural Navy**:
+   - Section Headings (`h1`–`h4`), small-caps caps (`font-variant: small-caps; letter-spacing: 0.04em;`), metadata cards, and formal LaTeX `booktabs` table borders (`\toprule`, `\bottomrule` equivalent to `1.5px solid #1b365d`).
+3. **Accent (10%) — Dark Gem-Toned Accents & Soft Tints**:
+   - `PASS`: `#166534` (Forest Green) on `#ecfdf3` tint.
+   - `WARN`: `#b45309` (Warm Amber) on `#fef9e7` tint.
+   - `FAIL`: `#991b1b` (Crimson / Burgundy) on `#fdf2f2` tint. Avoid pure digital `#ff0000`.
+   - `GUARD`: `#3730a3` (Deep Indigo) on `#eef2ff` tint.
+   - Hyperlinks & Cross-References: `#0f766e` (Deep Teal).
+   - Inline Highlight: `#fef9c3` (5% pastel yellow).
+
+---
+
+## 3. Structural Report Invariants & Self-Healing Pipeline
+
+Every compliance dossier produced under this skill must adhere to the following visual hierarchy:
 
 ```mermaid
 flowchart TD
     H["Header: Audited Model, Dataset, Protected Axis, Timestamp, JSON-LD"] --> S["Diagnostic Scope & Non-Intervention Guarantee Card"]
-    S --> E["0. Executive Summary 4-Stat Strip (Disparity Count, Worst Group, Worst Metric, Suppressed Count)"]
-    E --> C["1. Headline Fairness Metrics (Core Four Table + Inline SVG CI Whiskers)"]
-    C --> M["2. Per-Subgroup Disparity Matrix + Auto-Expanding n < 30 Insufficient Cohorts"]
-    M --> X["Optional: Demographic Surrogate Feature Attributions (Log-Odds Impact)"]
-    X --> G["3. Governance Documentation & Regulatory Traceability (EU AI Act / NIST AI RMF)"]
+    S --> E["0. Executive Summary 4-Stat Strip (Disparity Count, Worst Group, Worst Headline Metric [from Table 1], Suppressed Count)"]
+    E --> C["1. Headline Fairness Metrics (Core Four Table + Truthful [0, 1] SVG Whiskers with Ticks)"]
+    C --> M["2. Per-Subgroup Disparity Matrix (Canonical DPD, EOD, EOP, DIR Ordering) + Insufficient Cohorts"]
+    M --> X["3. Targeted Disparity Explainability & Proxy Attributions (Unified Deduplicated Log-Odds)"]
+    X --> G["4. Governance Documentation & Regulatory Traceability (EU AI Act / NIST AI RMF)"]
     G --> F["Footer: Version, Deterministic Guarantee, Offline Portability Note"]
 ```
 
 ### Invariant Rules
 1. **$n < 30$ Sample Suppression (NFR-003)**:
    - Subgroups with sample sizes below 30 must **never** display computed disparity values.
-   - They must be marked with `insufficient_sample=True`, highlighted with `.badge-guard`, and placed in a dedicated collapsible block (`<details class="insufficient-block">`).
+   - Marked with `insufficient_sample=True`, highlighted with `.badge-guard`, and placed in a dedicated collapsible block (`<details class="insufficient-block">`).
 2. **Offline Contract (R-015)**:
    - Exactly **0** external network requests: no external CDN scripts, no Google Fonts, no remote stylesheets, no external images.
-   - Vector graphics (confidence interval whiskers, metric bars) must be generated as **raw inline `<svg>`** elements via templating, not client-side JavaScript charting libraries.
-3. **Machine-Readable Metadata**:
-   - The `<head>` tag must contain `schema.org` JSON-LD of `@type: "Report"` documenting the model, dataset, axis, and software author.
+   - Vector graphics must be generated as **raw inline `<svg>`** elements via Jinja2 macros with calibrated `[0.0, 1.0]` domains.
+3. **Executive Summary Alignment**:
+   - Card 3 (`Worst headline metric`) must strictly pull from the overarching cross-group summary metric (`subgroup == "ALL"`) in Table 1 rather than subgroup outliers in Table 2.
+4. **Deduplicated Explainability**:
+   - Surrogate attribution must be rendered in a single unified section (`3. Targeted Disparity Explainability & Proxy Attributions`) with a global log-odds feature importance table and triggered pairs breakdown. Never repeat per-subgroup SHAP cards 30+ times.
+5. **Autonomous Self-Healing Engine (`ReportReconciler`)**:
+   - Supports deterministic audit mode (`scripts/reconcile_reports.py --check`) and automated self-healing (`scripts/reconcile_reports.py --heal` / `make reconcile`) to dynamically re-render reports and re-export companion PDFs whenever templates, metadata, or metrics drift.
 
 ---
 
@@ -205,11 +229,12 @@ def convert_html_to_pdf(html_path: Path, pdf_path: Path) -> Path:
     browser = find_blink_browser()
     pdf_path.parent.mkdir(parents=True, exist_ok=True)
 
-    cmd = [
-        str(browser),
-        "--headless",
+    base_args = [
         "--disable-gpu",
         "--run-all-compositor-stages-before-draw",
+        "--no-pdf-header-footer",
+        "--generate-pdf-document-outline",
+        "--allow-file-access-from-files",
         # Linux / Docker sandbox bypasses (required for non-root / containerized runs)
         "--no-sandbox",
         "--disable-setuid-sandbox",
@@ -218,9 +243,13 @@ def convert_html_to_pdf(html_path: Path, pdf_path: Path) -> Path:
         str(html_path.resolve()),
     ]
 
-    subprocess.run(
-        cmd, check=True, capture_output=True, text=True
-    )
+    # Try modern headless first (--headless=new), with fallback to legacy --headless
+    cmd = [str(browser), "--headless=new", *base_args]
+    res = subprocess.run(cmd, capture_output=True, text=True, check=False)
+    if (res.returncode != 0 or not pdf_path.exists()) and "unknown flag" in res.stderr.lower():
+        cmd_legacy = [str(browser), "--headless", *base_args]
+        subprocess.run(cmd_legacy, check=True, capture_output=True, text=True)
+
     return pdf_path
 ```
 

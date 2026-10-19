@@ -1,0 +1,9 @@
+---
+description: "6. Authoritative Portfolio Repository"
+globs: ["*"]
+alwaysApply: true
+---
+
+# 6. Authoritative Portfolio Repository
+
+- The user's authoritative portfolio repository is **`AaradhyaDT.github.io`** (`F:\AaradhyaDT\AaradhyaDT.github.io`), hosted under the personal account (`https://github.com/AaradhyaDT/AaradhyaDT.github.io`). The organization repository (`Aaradhya-Dev-Tamrakar/AaradhyaDT.github.io`) is strictly a secondary mirror. Whenever referencing, updating, or tracking the portfolio, use `F:\AaradhyaDT\AaradhyaDT.github.io` as the canonical default.

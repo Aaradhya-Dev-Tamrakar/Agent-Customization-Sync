@@ -4,7 +4,7 @@ description: "This skill should be used when the user asks to 'scaffold latex th
 
 # LaTeX Thesis & Presentation Architect — Calm-Authority Academic Standard
 
-This skill fuses **Anthropic Calm Authority** (`writing-like-claude`) with **CPM Orchestration & Context Firebreaks** (`adaptive-workflow`) to architect, draft, audit, and compile formal IEEE-compliant engineering thesis reports, project proposals, and Beamer defense presentations.
+This skill fuses **Calm Authority Writing** (`calm-authority-writing`) with **CPM Orchestration & Context Firebreaks** (`adaptive-workflow`) to architect, draft, audit, and compile formal IEEE-compliant engineering thesis reports, project proposals, and Beamer defense presentations.
 
 It natively incorporates two production-ready, pure-format open-source templates:
 1. **Academic Engineering Report Template**: [`latex-engineering-report-template`](https://github.com/Aaradhya-Dev-Tamrakar/latex-engineering-report-template) (`engineering-report.cls`)
@@ -55,7 +55,10 @@ Every document drafted or audited under this skill must satisfy these ten invari
 6. **IEEE 830 Requirement Phrasing**: Formulate Functional Requirements (`FR-xxx`) using strict IEEE 830 "shall" statements. Quantify Non-Functional Requirements (`NFR-xxx`) with numeric thresholds.
 7. **SOLID Principles Mapped to Concrete Code**: Map every SOLID principle directly to an architectural module and design pattern (Adapter, Strategy, Builder, Factory, Facade) rather than reciting textbook definitions.
 8. **Regulatory & Standards Grounding**: Trace system capabilities to external standards: EU AI Act (Article 10, Annex IV), NIST AI RMF (Govern, Map, Measure, Manage), and IEEE standards. Consult [`references/regulatory-and-standards-matrix.md`](references/regulatory-and-standards-matrix.md).
-9. **Formal LaTeX Typographic Standard**: Use `engineering-report.cls` (12pt `scrreprt`, Times font via `newtxmath`, `microtype`, `booktabs` without vertical lines, and `cleveref` for `\cref{...}`).
+9. **Formal LaTeX Typographic Standard & 60-30-10 Palette**: Use `engineering-report.cls` or `at_fuse_aif.cls` (12pt `scrreprt`, Times font via `newtxmath`, `microtype`, `booktabs` without vertical lines, and `cleveref` for `\cref{...}`). Enforce the **60-30-10 palette hierarchy**:
+   - **60% Dominant**: `#FFFFFF` / `#F8FAFC` canvas with `#1E293B` Charcoal body text (never pure digital black).
+   - **30% Secondary**: `#1B365D` Deep Report Navy for section headings (`\addtokomafont{disposition}{\color{ReportNavy}}`) and table top/bottom rules.
+   - **10% Accent**: Desaturated gem tones (`#166534` pass, `#B45309` warn, `#991B1B` crimson fail, `#3730A3` guard, `#0F766E` teal hyperlinks, `#FEF9C3` soft callout tints). Never use neon `#FF0000` or raw `#0000FF`.
 10. **Actionable Conclusion over Redundant Summaries**: Conclude with empirical metric highlights, limitations revisited with integrity, and open scientific research directions.
 
 ---

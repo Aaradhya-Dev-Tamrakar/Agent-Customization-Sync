@@ -1,0 +1,9 @@
+---
+description: "3. Cross-Tool Session Continuity"
+globs: ["*"]
+alwaysApply: true
+---
+
+# 3. Cross-Tool Session Continuity
+
+- When any `Claude_export*.md` or exported transcript files exist in the active directory or project, read them first to inherit context before proceeding with subsequent tasks.

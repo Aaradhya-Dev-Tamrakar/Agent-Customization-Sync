@@ -14,10 +14,16 @@ This skill defines the canonical standard operating procedure (SOP) for all soft
 2. **Branch Isolation**: Never commit multi-step features or refactors directly to `main` in team or cohort environments. Always branch off `main` using `<type>/<slug>-#<ID>`.
 3. **Checkpoint Task Tracking**: Check off acceptance criteria in the issue body progressively as tasks complete (`gh-task --issue <ID> --task "<name>"` or `gh-task --issue <ID> --index <N>`).
 4. **Verification Gate**: Never commit or push without passing local linters (`ruff`, `eslint`), formatters, and test suites (`pytest`, `npm test`, `Invoke-Pester`). Universal Makefile entrypoints (`make test`, `make lint`, `make format`, `make verify`) are recommended wherever a `Makefile` is present. 100% pass rate required; zero errors tolerated.
-5. **Ecosystem Synchronization (`Makefile`, `sync.bat`, `sync.ps1`, `sync.sh`)**: When `sync.ps1`, `sync.bat`, `sync.sh`, `scripts/sync.ps1`, `scripts/sync.bat`, `scripts/sync.sh`, or a `Makefile` with a `sync` target is present in the repository, direct `git commit`, `git add`, or `git push` commands are **strictly forbidden**. All version control must run through `make sync` (or `.\sync.bat`, `.\scripts\sync.bat`, `./sync.sh`, or `pwsh -File ...`).
-   - **Zero-Friction Wrapper & Native Help**: Windows environments must prioritize `.\sync.bat` (or `make.bat`) to bypass PowerShell `ExecutionPolicy` on fresh clones. All `sync.bat` scripts must provide native help routing (`/?`, `-help`, `--help`) documenting common usage, `-SkipCI`, `-WhatIf`, `-PullOnly`, `-Status`, and BRL `-PR`.
-   - **Root Decluttering Architecture**: To satisfy academic and open-source evaluation standards (TAs, external reviewers), keep the repository root clean by maintaining the root `Makefile` (canonical POSIX interface) and `make.bat` (zero-dependency Windows dispatcher) at root, while organizing underlying sync engines under `scripts/` (`scripts/sync.ps1`, `scripts/sync.bat`, `scripts/sync.sh`). Root `sync.bat` may be retained as a lightweight compatibility forwarder shim.
-   - **Cross-Platform Parity**: Unix/Linux/macOS environments execute `make sync` or `./sync.sh` without requiring PowerShell dependencies.
+5. **Ecosystem Synchronization & The Task Runner Boundary (`Makefile`, `sync.bat`, `sync.ps1`, `sync.sh`)**:
+   - **Task Runner vs. VCS Engine Separation of Concerns**:
+     - **Omnibus Task Runner (`Makefile` / `make.bat`)**: The universal front-door interface for development, build, and test routines (`make test`, `make lint`, `make format`, `make verify`, `make audit`, `make clean`). Highly recommended for collaborative, fellowship, and academic repositories (e.g. `BiasAperture`) where Linux/macOS cohort members expect standard build targets.
+     - **VCS & Governance Engine (`sync.ps1` / `sync.bat`)**: The sole authoritative engine for repository state transitions, diff tokenization, AST-driven conventional commits, secret screening, multi-remote pushes, and PR automation. A `Makefile` **never** replaces `sync.ps1`; instead, `make sync` delegates directly to `scripts\sync.bat` (or root `sync.bat`).
+   - **Root Entrypoint & Forwarder Guarantee**:
+     - In flat repositories (`Fleet-Orchestrator`, `brainstorm`, `SPARK`), `sync.bat` and `sync.ps1` reside directly at the repository root.
+     - In structured/decluttered repositories where sync scripts reside in `scripts/` (`scripts/sync.ps1`, `scripts/sync.bat`), a root `sync.bat` forwarder (`call "%~dp0scripts\sync.bat" %*`) **MUST** be maintained at the repository root. This guarantees that all ecosystem tools, subagents, and automated workflows invoking `.\sync.bat` from the root succeed deterministically.
+   - **Zero-Friction Wrapper & Native Help**: Windows environments must prioritize `.\sync.bat` (or `make.bat`) to automatically bypass PowerShell `ExecutionPolicy` on fresh clones. All `sync.bat` scripts must provide native help routing (`/?`, `-help`, `--help`) documenting common usage, `-SkipCI`, `-WhatIf`, `-PullOnly`, `-Status`, and BRL `-PR`.
+   - **Cross-Platform Parity**: Unix/Linux/macOS environments execute `make sync` or `./scripts/sync.sh` without requiring PowerShell dependencies.
+   - **Absolute Ban on Raw Git Operations**: When `sync.ps1`, `sync.bat`, `scripts/sync.bat`, or a `Makefile` with a `sync` target is present, direct `git commit`, `git add`, or `git push` commands are **strictly forbidden**. All version control must run through `make sync` or `.\sync.bat`.
 6. **Selective CI Runner Bypass & Workflow Hardening (`-SkipCI`, Path Whitelisting & Concurrency)**:
    - **Path Whitelisting in Workflows**: All CI workflows (`.github/workflows/*.yml`) should enforce explicit `paths:` whitelisting for core executable assets (`src/**`, `sim/**`, `tools/**`, `schemas/**`, `scripts/**`, `requirements*.txt`, `audit.bat`, `sim.bat`, workflow files), preventing high-churn research, reports, dev-logs, and documentation files from needlessly consuming GitHub Actions runner quotas.
    - **Concurrency Governance**: Enforce `concurrency: group: <workflow>-${{ github.ref }} cancel-in-progress: true` to instantly terminate redundant intermediate builds when rapid pushes occur. Always include `workflow_dispatch:` for manual on-demand triggers.
@@ -30,6 +36,7 @@ This skill defines the canonical standard operating procedure (SOP) for all soft
    - **Track B: BRL Cohort & Contributor Automated PR Standard**: All multi-contributor feature work and cohort initiatives **MUST** execute the automated Pull Request workflow (`.\sync.bat -PR -m "type(scope): summary" -Issue <ID> -Reviewer <handle>`).
    - **Explicit Usernames**: Always assign explicit GitHub usernames (e.g. `--assignee AaradhyaDT`, `--reviewer tiixsha`). Never use ambiguous `@me` in collaborative repositories.
    - **Reciprocal Peer Review**: When Developer A opens a PR, request review from Developer B; when Developer B opens a PR, request review from Developer A.
+   - **PR Merge Governance (Solo vs. Collaborative)**: For multi-contributor/cohort initiatives, peer review sign-off is required before merging. For solo project repositories, PRs can be merged directly once local verification gates and remote CI checks pass (`gh pr merge <ID> --squash --delete-branch`).
 9. **Collaborative Privacy & Boundary Isolation (Zero Personal Leakage)**:
    > [!CAUTION]
    > **Never commit or log personal developer resources into collaborative/public repositories.**
@@ -41,6 +48,10 @@ This skill defines the canonical standard operating procedure (SOP) for all soft
 11. **Agent Rules Architecture (`AGENTS.md` Single Source of Truth)**:
     - Always maintain full operational guidelines, verification rules, and ecosystem invariants in `AGENTS.md`.
     - Keep `GEMINI.md` lean by referencing `[@AGENTS.md](AGENTS.md)` in backticks to prevent documentation duplication and rule drift across tools.
+12. **Shell Escaping & Body-File Invariant (`INV-GH-BODY-FILE`)**:
+    - **Zero Shell Interpolation Glitches**: When creating or editing GitHub issues, PRs, or comments on Windows (PowerShell/CMD), **never pass complex multi-line Markdown with backticks, LaTeX math (`$`), or backslashes (`\`) directly via inline `--body "..."`**.
+    - PowerShell expands `$`, strips backslashes, and corrupts characters into Unicode diamond replacement glyphs (e.g. `\sp-nn\`, `\^dge-ai-model-forge\`).
+    - **Mandatory Pattern**: Always write the markdown content to a temporary clean file (e.g. `scratch/issue_body.md`) and pass it using `--body-file "<path>"` (or `--input -` for `gh api` JSON payloads). This guarantees 100% byte-exact UTF-8 markdown rendering without shell escaping artifacts.
 
 ---
 
@@ -70,9 +81,9 @@ flowchart TD
     More -- Yes --> CodeB
     More -- No --> VerifyB["Step 5: Pre-Commit Verification (make verify / tests)"]
     VerifyB --> PRSync["Step 6: Automated PR Sync (make sync / sync.bat -PR)"]
-    PRSync --> Review{"Peer Review & CI Check"}
+    PRSync --> Review{"CI & Review Check"}
     Review -- Changes Requested --> CodeB
-    Review -- Approved / Green CI --> Merge["Step 8: Squash Merge & Prune Stale Branch"]
+    Review -- "Approved CI (Solo) / Peer Approved" --> Merge["Step 8: Squash Merge & Prune Stale Branch"]
 ```
 
 ---
@@ -88,22 +99,44 @@ Define requirements, acceptance criteria, and technical boundaries before touchi
    See [templates.md](examples/templates.md) for pre-built formats.
 
 2. **Create via GitHub CLI**:
-   ```bash
-   gh issue create \
-     --title "[Feature] Add Statistical Parity Disparity Metric" \
-     --assignee "AaradhyaDT" \
-     --label "enhancement,WP4" \
-     --body "$(cat << 'EOF'
-   ## Overview
-   Implement statistical parity difference calculation with BCa confidence intervals.
+   - **POSIX / Linux / macOS (Heredoc)**:
+     ```bash
+     gh issue create \
+       --title "[Feature] Add Statistical Parity Disparity Metric" \
+       --assignee "AaradhyaDT" \
+       --label "enhancement,WP4" \
+       --body "$(cat << 'EOF'
+     ## Overview
+     Implement statistical parity difference calculation with BCa confidence intervals.
 
-   ## Tasks
-   - [ ] Implement mathematical metric in src/fairness/metrics.py
-   - [ ] Add unit tests with synthetic distribution fixtures
-   - [ ] Verify test suite passing (pytest) and linting (ruff)
-   EOF
-   )"
-   ```
+     ## Tasks
+     - [ ] Implement mathematical metric in src/fairness/metrics.py
+     - [ ] Add unit tests with synthetic distribution fixtures
+     - [ ] Verify test suite passing (pytest) and linting (ruff)
+     EOF
+     )"
+     ```
+   - **Windows PowerShell / Complex Markdown (INV-GH-BODY-FILE)**:
+     *Avoids PowerShell string interpolation, backtick stripping, and Unicode diamond glyph corruption:*
+     ```powershell
+     # 1. Write exact markdown content to a clean temporary file
+     Set-Content -Path "scratch/issue_body.md" -Encoding UTF8 -Value @"
+     ## Overview
+     Implement statistical parity difference calculation with BCa confidence intervals.
+
+     ## Tasks
+     - [ ] Implement mathematical metric in src/fairness/metrics.py
+     - [ ] Add unit tests with synthetic distribution fixtures
+     - [ ] Verify test suite passing (pytest) and linting (ruff)
+     "@
+
+     # 2. Dispatch via --body-file
+     gh issue create `
+       --title "[Feature] Add Statistical Parity Disparity Metric" `
+       --assignee "AaradhyaDT" `
+       --label "enhancement,WP4" `
+       --body-file "scratch/issue_body.md"
+     ```
 
 3. **Record Issue Number**: Note `#<ISSUE_NUMBER>` (e.g., `#28`).
 
@@ -189,6 +222,8 @@ gh issue comment 28 --body "Completed metric math and unit test fixtures. 85 tes
 
 Enforce local verification before staging. Zero errors tolerated.
 
+Run verification in the exact branch or worktree being delivered. Before reporting results, capture the tested `HEAD` and working-tree status. If concurrent or unrelated changes are present, isolate the target branch or clearly scope the result; rerun there before attributing shared-tree results to that branch. Report the command, observed pass/fail counts, and whether the result came from local execution or CI.
+
 #### Universal Makefile Entrypoints (Recommended across all POSIX & CI environments)
 ```bash
 make test        # Run unit & integration test suites
@@ -255,6 +290,9 @@ This guarantees that documentation commits, research transcripts, and operationa
 ---
 
 ### Step 6: Multi-Remote Ecosystem Synchronization
+
+**Wrapper preflight and post-merge cleanup:** Before passing `/?`, `--help`, or another help switch to a repository sync wrapper, inspect its argument routing or use its documented `-WhatIf` preview. A wrapper that does not recognize help may run a normal push. After a PR merge, do not sync the merged feature branch: that can recreate its deleted remote ref. Switch to the base branch, run the wrapper's safe pull-only mode, and verify the merged PR, branch refs, and clean working tree.
+
 
 Check the repository for synchronization automation in order of precedence:
 1. **Root `Makefile` / `make.bat`**: Universal entrypoint across Linux, macOS, and Windows.
@@ -375,13 +413,21 @@ gh issue edit <ISSUE_NUMBER> --milestone "<Milestone Title>"
 1. **Addressing Review Feedback**:
    Make edits, rerun verification tests, and run `.\sync.bat -m "fix(fairness): address review comments (#28)"`. New commits automatically attach to the open PR.
 
-2. **Closing Tracked Issues with Verifiable Evidence**:
+2. **Squash-Merge Execution (Solo vs. Collaborative)**:
+   - **Solo Project Repositories**: Once remote CI passes green, merge directly:
+     ```bash
+     gh pr merge <PR_NUMBER> --squash --delete-branch
+     ```
+   - **Collaborative / Cohort Repositories**: Wait for required peer review approval before squash-merging.
+
+3. **Closing Tracked Issues with Verifiable Evidence**:
    When resolving an anchored issue (either upon PR merge or via maintainer Track A), always close with authentic verification proof and head commit SHA:
    ```bash
    gh issue close <ISSUE_NUMBER> --comment "Completed in commit <SHORT_SHA>. Verified 100% test pass (X tests passing, 0 lint errors, dual-layer verification certified)."
    ```
+   *Note for multi-line or formatted markdown comments on Windows*: If adding multi-line closing details, use `gh issue comment <ISSUE_NUMBER> --body-file "scratch/close_comment.md"` or pass JSON via `gh api` to prevent shell escaping artifacts (`INV-GH-BODY-FILE`).
 
-3. **After PR Merge**:
+4. **After PR Merge**:
    Switch back to `main`, pull the merged changes, and prune stale local branches:
    ```powershell
    git switch main

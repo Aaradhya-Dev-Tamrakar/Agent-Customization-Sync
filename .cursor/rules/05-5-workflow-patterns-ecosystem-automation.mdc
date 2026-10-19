@@ -1,0 +1,36 @@
+---
+description: "5. Workflow Patterns & Ecosystem Automation (`sync.ps1` / `sync.bat`)"
+globs: ["*"]
+alwaysApply: true
+---
+
+# 5. Workflow Patterns & Ecosystem Automation (`sync.ps1` / `sync.bat`)
+
+- **Inspection Before Action**: Discover actual repository conventions, schema, and layout via direct inspection; never assume conventions.
+- **Integrity Diff Checks**: Diff new/modified content against live repository state (title/search-index diffs, `id` ↔ `href` link integrity, syntax validity, HTML/JSX tag balance) before completing work.
+- **Default GitHub Development Workflow (`github-workflow`)**:
+  - Whenever implementing features, fixing bugs, refactoring, or managing version control across GitHub repositories, the agent **MUST automatically activate and apply the `github-workflow` skill** (`C:\Users\Aaradhya\.gemini\config\skills\github-workflow\SKILL.md`).
+  - Standard development sequence:
+    1. **Issue Anchoring**: Formulate requirements with acceptance tasks (`- [ ]`) and create a tracked issue with full metadata (`gh issue create --assignee "@me" --label "<labels>"`).
+    2. **Branch Isolation**: Branch off `main` via `<type>/<slug>-#<id>`, never committing multi-step changes directly to `main`.
+    3. **Progressive Task Tracking**: Check off tasks as completed using `gh-task --issue <id> --task "..."` (or `toggle-issue-task`).
+    4. **Verification Gate**: Enforce local test suite (`pytest`) and linting (`ruff`) clean passes before commits.
+    5. **Ecosystem Synchronization**: Run all version control through `.\sync.bat -m "type(scope): summary (#id)"` (or `.\sync.ps1`).
+    6. **Pull Request & Review Dispatch**: Open PR with complete sidebar metadata (`gh pr create --assignee "@me" --label "<labels>" --reviewer <teammate>`), link the issue (`Closes #<id>`), and document test proof.
+    7. **PR Merge Governance**: For collaborative/cohort repositories, require peer review sign-off. For solo project repositories, PRs can be merged directly once local verification gates and remote CI pass (`gh pr merge <id> --squash --delete-branch`).
+- **`sync.ps1` / `sync.bat` Self-Reporting & Enforcement Gate**:
+  - Always check if `sync.ps1` or `sync.bat` is present in the repository root.
+  - If `sync.ps1` is present: raw `git commit`, `git push`, or `git add` are strictly forbidden. All version control must run through `.\sync.bat` (or `.\sync.ps1`):
+    - **Zero-Friction Wrapper**: Prefer `.\sync.bat` across Windows environments to automatically bypass PowerShell ExecutionPolicy (`Restricted`/`RemoteSigned`) on fresh clones without manual system configuration.
+    - **Routine / Minor Changes**: `.\sync.bat` (or `.\sync.ps1`)
+    - **Major Features / Architectural Changes**: Update tracker (e.g., `dev-logs/PortfolioWebsite_TRACKER.md` or repo tracker) first, then run `.\sync.bat -m "feat(scope): detailed summary"`.
+  - **Root Entrypoint & Companion Guarantee**:
+    - If a repository contains `sync.ps1` but lacks `sync.bat`, create or maintain `sync.bat` as the companion entrypoint to guarantee friction-free execution across new machines.
+    - If a repository organizes sync scripts under `scripts/` (e.g., `scripts/sync.ps1` and `scripts/sync.bat` in repos with root `Makefile`/`make.bat` like `BiasAperture`), a root `sync.bat` forwarder (`call "%~dp0scripts\sync.bat" %*`) **MUST** be maintained at the repository root so `.\sync.bat` works unconditionally.
+  - **Task Runner vs. VCS Engine Boundary (`Makefile` vs `sync.ps1`)**:
+    - `Makefile` / `make.bat` serves as an omnibus developer task runner for build/test routines (`make test`, `make lint`, `make verify`, `make audit`, `make clean`). Highly recommended in collaborative/fellowship repositories.
+    - `sync.ps1` / `sync.bat` remains the sole authoritative engine for version control, secret screening, diff AST analysis, automated conventional commits, and PR routing. In repositories with a `Makefile`, `make sync` delegates directly to `sync.bat`.
+- **Output Discipline**:
+  - Zero conversational framing, fluff, or narrative padding. Dive straight into execution.
+  - No unnecessary post-explanations of code edits unless specifically requested.
+  - If verification fails or conflicts occur, halt and report the exact discrepancy concisely.

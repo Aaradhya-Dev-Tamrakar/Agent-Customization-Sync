@@ -1,0 +1,11 @@
+---
+description: "Codex Memory Mirror"
+globs: ["*"]
+alwaysApply: true
+---
+
+# Codex Memory Mirror
+
+- A full local mirror of Codex memory is stored at `~/.gemini/config/codex-memories/`.
+- For prior decisions or user preferences, consult `codex-memories/MEMORY.md` and `codex-memories/memory_summary.md` when relevant.
+- `codex-memories/rollout_summaries/` and `codex-memories/extensions/` retain detailed historical context; consult selectively when needed.

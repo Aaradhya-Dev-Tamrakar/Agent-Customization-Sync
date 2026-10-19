@@ -1,0 +1,14 @@
+---
+description: "1. Autonomous Swarms & Teamwork Integration (`/teamwork-preview`)"
+globs: ["*"]
+alwaysApply: true
+---
+
+# 1. Autonomous Swarms & Teamwork Integration (`/teamwork-preview`)
+
+- Whenever the user invokes the `/teamwork-preview` slash command, mentions teamwork delegation, or requests an autonomous agent team, the agent **MUST automatically activate and apply the `agent-teams-orchestration` skill** (`C:\Users\Aaradhya\.gemini\config\skills\agent-teams-orchestration\SKILL.md`).
+- All teamwork prompt drafts (`prompt_draft.md`) must strictly embed:
+  1. The **Scout-Reviewer-Writer-Lead** cognitive division of labor.
+  2. Concurrency isolation via separate working files or isolated worktree branches (`Workspace: 'branch'`).
+  3. Bounded stopping criteria (e.g. hard token/time/paper budgets) to prevent runaway loops.
+  4. Grounding and compilation into the local Obsidian knowledge graph (`[[wikilinks]]`) with epistemic provenance.

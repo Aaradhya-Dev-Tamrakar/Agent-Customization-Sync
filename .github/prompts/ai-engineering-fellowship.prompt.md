@@ -60,11 +60,48 @@ Every project pattern is calibrated by actual mentor marks from Google Classroom
 | **15** | Engineering AI Systems (RAG) | **86/100** | `CALIB` | [`M4/WK15`](file:///F:/FuseAIF2026/M4/WK15) | `AaradhyaDT/fuseAiF_wk15_ai_assistant_rag` |
 | **16** | Agentic Loop & Eval Harness | **85/100** | `CALIB` | [`M4/WK16`](file:///F:/FuseAIF2026/M4/WK16) | `AaradhyaDT/fuseAiF_wk16_agentic_assistant` |
 | **17** | Production MLOps (Dual Track) | **Turned In** | `GOLDEN` | [`M5/WK17`](file:///F:/FuseAIF2026/M5/WK17) | `AaradhyaDT/fuseAiF_wk17_telco_churn_mlops`<br>`AaradhyaDT/fuseAiF_wk17_agentic_mlops` |
+| **18** | Trustworthy AI: Guardrails | **Turned In** | `GOLDEN` | [`M5/WK18`](file:///F:/FuseAIF2026/M5/WK18) | `AaradhyaDT/fuseAiF_wk18_trustworthy_ai_guardrails` |
 | **Cap** | BiasAperture (Fairness Audit) | **Live Mod 7** | `GOLDEN` | [`fuseai-fellowship/...`](file:///F:/FuseAIF2026/fuseai-fellowship) | `AaradhyaDT/BiasAperture` |
 
 ---
 
-## 4. How `/adaptive-workflow` Interacts with This Skill
+## 4. The Three-Layer Framework: First-Principles Engineering Authority
+
+To avoid the **Commodity Trap** (merely teaching or generating syntax and API calls that LLMs produce in seconds), all fellowship codebases, learning modules, and reference architectures are structured around the **Hierarchy of AI Value**:
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│ 1. FIRST-PRINCIPLES ANCHOR (The Non-Commodity Human Question)          │
+│    - What is the underlying physical, economic, or data invariant?     │
+│    - Why will a naive off-the-shelf model silently fail here?          │
+├────────────────────────────────────────────────────────────────────────┤
+│ 2. COMMODITY SCAFFOLDING (What You Let AI Generate)                   │
+│    - Boilerplate training loops, standard PyTorch/Scikit-Learn code,   │
+│      FastAPI routers, and baseline hyperparameters.                    │
+├────────────────────────────────────────────────────────────────────────┤
+│ 3. EPISTEMIC RED-TEAMING (The Reality & Invariant Filter)             │
+│    - How can this model lie to us? (Data leakage, spurious shortcuts)  │
+│    - Hard verification gates (Group splits, Bootstrap CIs, Edge tests) │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+### Domain Enforcement Invariants:
+1. **Tabular ML & Churn (Weeks 4 & 5)**:
+   - *First Principle*: In customer churn, temporal ordering matters. Random K-Fold splits cause temporal data leakage.
+   - *Epistemic Gate*: SHAP is used as a **data leakage detector** (flagging features like `total_charges` or `tenure` that artificially dominate with near-zero error), not as cosmetic chart padding.
+2. **Computer Vision & Defect Detection (Weeks 9 & 11)**:
+   - *First Principle*: Industrial cameras suffer from orientation jitter, vibration, and lighting drift. Fixed-crop 99% accuracy models collapse when rotated.
+   - *Epistemic Gate*: Out-of-distribution physical stress testing (synthetic rotation, illumination attenuation) verifies the network learned physical defect morphology rather than background texture.
+3. **Agentic AI & RAG Systems (Weeks 14–16)**:
+   - *First Principle*: Non-deterministic LLMs evaluating non-deterministic LLM agents is circular reasoning.
+   - *Epistemic Gate*: Enforce deterministic evaluation harnesses (ground-truth citation matching, context firebreaks `INV-CTX-FIREBREAK`, and low-latency $<50\text{ms}$ SLM routing).
+4. **Capstone: BiasAperture (Demographic Bias Auditing)**:
+   - *First Principle*: An uncurated dataset with missing provenance cannot legally or scientifically audit fairness.
+   - *Epistemic Gate*: Enforce immutable sample-ID manifests, stratified subgroup bootstrap confidence intervals ($B \ge 1000$ for small cells $n < 30$), and strict demarcation ($\text{VERIFIED LIVE} \neq \text{PROPOSED}$).
+
+---
+
+## 5. How `/adaptive-workflow` Interacts with This Skill
 
 When `/adaptive-workflow` triages an incoming objective:
 1. **Domain Routing**: Matches user requirements against the 17 fellowship domains.
@@ -77,7 +114,7 @@ When `/adaptive-workflow` triages an incoming objective:
 
 ---
 
-## 5. Supporting Documentation & Resources
+## 6. Supporting Documentation & Resources
 
 ### SOTA Best Practices Index
 - **`references/best_practices_index.md`**: Cross-cutting synthesis of modern production patterns (SQL, ML pipelines, PyTorch, RAG, and MLOps).

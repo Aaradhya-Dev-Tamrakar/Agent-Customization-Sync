@@ -58,8 +58,15 @@ def mirror_memory(source_dir: Path | None = None, destination_dir: Path | None =
 
     expected_files = set(source_files)
     for target_path in sorted(destination.rglob("*"), reverse=True):
+        try:
+            rel = target_path.relative_to(destination)
+        except ValueError:
+            continue
+        # Preserve git internal files and gitignore
+        if rel.parts and rel.parts[0] in {".git", ".gitignore"}:
+            continue
         if target_path.is_file() or target_path.is_symlink():
-            if target_path.relative_to(destination) not in expected_files:
+            if rel not in expected_files:
                 target_path.unlink()
         elif target_path.is_dir() and not any(target_path.iterdir()):
             target_path.rmdir()

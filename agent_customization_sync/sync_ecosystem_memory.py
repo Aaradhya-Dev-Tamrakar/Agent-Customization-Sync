@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import datetime
 import hashlib
-import os
 import shutil
 import subprocess
 import sys

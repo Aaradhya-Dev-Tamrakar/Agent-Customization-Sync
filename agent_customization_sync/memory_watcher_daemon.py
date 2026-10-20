@@ -6,8 +6,6 @@ and safely executes the unified memory synchronizer.
 from __future__ import annotations
 
 import datetime
-import hashlib
-import os
 import sys
 import threading
 import time

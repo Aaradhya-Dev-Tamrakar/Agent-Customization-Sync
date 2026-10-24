@@ -317,5 +317,10 @@ Add geometric SVG mask patterns (`loops`, `strata`, `threads`) to card headers t
      ```
 3. **Responsive Containment**:
    - Explicitly collapse or hide complex secondary wordmarks below `900px` viewports to protect mobile navigation space.
-4. **Deterministic Verification**:
+4. **Mechanical SVG Avatar Bloom Pattern (Tang Lotus Pattern)**:
+   - For multi-state avatar emblems or affiliation crests:
+     - **Option A (Pure SVG In-Hole Embedding - Recommended)**: Embed affiliation marks/badges directly inside the primary geometric SVG blade/socket nodes (`<g class="lotus-blade--primary">`) with solid metallic bezels rather than disconnected floating HTML overlays. Dormant states scale and rotate the ring behind the central portrait (`scale(0.64) rotate(-18deg)`), automatically tucking badges 100% behind the frontmost portrait stage (`z-index: 10`). Hover states unfurl cleanly to $(155, 35)$ with $+3.0\text{px}$ clearance past the portrait rim and $0.0\text{px}$ coaxial error.
+     - **Option B (Coaxial HTML Overlay - Alternative)**: Retain HTML anchors (`<a>`) inside an overlay container pinned coaxially to $(155, 35)$ using trigonometric CSS translation variables (`--dx: r * cos(θ)`, `--dy: r * sin(θ)`). Useful when complex DOM tooltips, high-contrast screen reader anchor markup, or independent CSS hover scaling (`scale(1.14)`) take priority over zero-JavaScript rotation synchronization.
+     - **Zero-Friction Dash Pruning**: Ban artificial dashed orbit rings in luxury gold components; use crisp solid metallic specular strokes (`#f3cf82`) to preserve calm authority.
+5. **Deterministic Verification**:
    - Every interface change must pass local linters (`ruff`, `eslint`) and verification suites (`python scripts/verify.py` or equivalent test harness) with 100% clean passes before commits.

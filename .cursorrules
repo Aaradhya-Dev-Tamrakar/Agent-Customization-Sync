@@ -38,6 +38,8 @@ When interacting with `super-nlm` or `notebooklm` MCP tools, reference these pri
 - **Jupyter Notebooks**: Never run or execute `.ipynb` files headlessly via CLI commands; leave execution for Google Colab or manual runs.
 - **In-Place File Delivery**: Apply edits directly to target files in the repository using diff-precise tools; do not stage files into zip archives or external output directories unless explicitly asked.
 - **Ambiguity & Disambiguation Gate**: Execute what is explicitly instructed. If scope, repository target, or file formatting is ambiguous, ask first rather than assuming.
+- **Slash Command Discipline**: Suggest at most one single relevant slash command only when immediately helpful to the next user action. Never enumerate, repeat, or list multiple alternative slash commands in a single response.
+- **Filesystem Pruning & Mirror Invariant**: Any script or tool that synchronizes, mirrors, or cleans up destination directories (e.g. `mirror_memory`, mirror sync scripts) must unconditionally exclude `.git`, `.github`, and `.gitignore` from pruning walks to avoid Windows access-denial collisions on read-only VCS objects.
 
 ---
 
@@ -85,3 +87,4 @@ When interacting with `super-nlm` or `notebooklm` MCP tools, reference these pri
 - A full local mirror of Codex memory is stored at `~/.gemini/config/codex-memories/`.
 - For prior decisions or user preferences, consult `codex-memories/MEMORY.md` and `codex-memories/memory_summary.md` when relevant.
 - `codex-memories/rollout_summaries/` and `codex-memories/extensions/` retain detailed historical context; consult selectively when needed.
+- **Bidirectional Mirror Invariant**: Personal operating telemetry and health guardrails reside in `codex-memories/extensions/ad_hoc/notes/`. When updating memory, mirror changes between `~/.codex/memories/` and `~/.gemini/config/codex-memories/` using `Agent-Customization-Sync/custom_sync.bat mirror-memory`.

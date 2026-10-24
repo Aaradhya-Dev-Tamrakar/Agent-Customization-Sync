@@ -91,3 +91,19 @@ If a task was launched into the background:
 
 3. **Never Chain Commands Behind a Suspected Hang**:
    - Always verify or terminate a blocked task before initiating subsequent file operations on the same partition or directory.
+
+---
+
+## 5. PowerShell Profile Startup Performance
+
+When a user's normal `pwsh` startup is slow, compare fresh normal and `-NoProfile` launches from an interactive terminal before changing files. Measure warm runs separately from the first launch, and use the same executable, terminal, and working directory. Profile functions called inside an already-running shell are not a substitute for measuring fresh process startup.
+
+- Keep personal PowerShell profile code and its supporting files outside redirected or cloud-synced Documents folders when sync latency is a concern. A small loader at the standard profile path can dot-source a local profile under `$env:LOCALAPPDATA\PowerShell\profile.ps1`.
+- Test the exact `pwsh.exe` the user launches before relocating a profile. Packaged/Store PowerShell can have different filesystem visibility from another `pwsh` executable even when `$env:LOCALAPPDATA` prints the same path; a loader can fail because its target is inaccessible. Keep the active script at the standard profile path if the packaged runtime cannot read the local target.
+- Time profile initialization steps in fresh shells. Defer optional modules and command discovery until first use where their behavior allows it; preserve normal command output and argument handling when adding lazy wrappers or proxies.
+- Keep network update checks out of shell startup. Provide an explicit command for manual checks instead.
+- Compare local disk and Dev Drive using alternating warm runs. Do not attribute a meaningful improvement to a small difference inside observed run-to-run variation.
+- After edits, verify profile parse/load, command and alias behavior, the first-use lazy path, and fresh-shell startup. Preserve a recoverable copy before replacing the active profile.
+- Record measurements as `EMPIRICALLY_VERIFIED` with shell version, terminal mode, run counts, and cold/warm distinction. A profile's exact timings are machine-specific; remeasure rather than treating historical figures as defaults.
+
+Example: one Windows 11 machine running PowerShell 7.6.5 measured warm interactive startup around 1.55–1.62 s before deferring optional module loading and editor discovery; after those changes, warm launches measured 0.943–0.956 s. Moving the profile from Local AppData on C: to a ReFS Dev Drive on F: changed the five-run warm median by only 14 ms (1,587 ms to 1,573 ms), within observed variation. Treat these as a single-machine case study, not expected timings.

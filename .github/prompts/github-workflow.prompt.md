@@ -48,10 +48,20 @@ This skill defines the canonical standard operating procedure (SOP) for all soft
 11. **Agent Rules Architecture (`AGENTS.md` Single Source of Truth)**:
     - Always maintain full operational guidelines, verification rules, and ecosystem invariants in `AGENTS.md`.
     - Keep `GEMINI.md` lean by referencing `[@AGENTS.md](AGENTS.md)` in backticks to prevent documentation duplication and rule drift across tools.
-12. **Shell Escaping & Body-File Invariant (`INV-GH-BODY-FILE`)**:
-    - **Zero Shell Interpolation Glitches**: When creating or editing GitHub issues, PRs, or comments on Windows (PowerShell/CMD), **never pass complex multi-line Markdown with backticks, LaTeX math (`$`), or backslashes (`\`) directly via inline `--body "..."`**.
+12. **Shell Escaping & Body-File Invariant (`INV-GH-BODY-FILE` & `gh.ps1` / `gh.bat`)**:
+    - **Zero Shell Interpolation Glitches**: When creating or editing GitHub issues, PRs, or comments on Windows (PowerShell/CMD), **never pass complex multi-line Markdown with backticks, LaTeX math (`$`), or backslashes (`\`) directly to raw `gh` via inline `--body "..."`**.
     - PowerShell expands `$`, strips backslashes, and corrupts characters into Unicode diamond replacement glyphs (e.g. `\sp-nn\`, `\^dge-ai-model-forge\`).
-    - **Mandatory Pattern**: Always write the markdown content to a temporary clean file (e.g. `scratch/issue_body.md`) and pass it using `--body-file "<path>"` (or `--input -` for `gh api` JSON payloads). This guarantees 100% byte-exact UTF-8 markdown rendering without shell escaping artifacts.
+    - **Automated Wrapper Pattern (`.\gh.bat` / `.\gh.ps1`)**: Use `.\gh.bat` (or `.\gh.ps1` from `scripts/gh.ps1`), which automatically intercepts `--body` / `-b` and `--notes` arguments, writes BOM-less UTF-8 payloads to an ephemeral file (`scratch/.gh_body_<guid>.md`), rewrites the flag to `--body-file`, and cleans up in `finally{}`.
+    - **Manual Fallback Pattern**: If invoking raw `gh.exe` directly, write the markdown content to a temporary clean file (e.g. `scratch/issue_body.md`) and pass it using `--body-file "<path>"` (or `--input -` for `gh api` JSON payloads). This guarantees 100% byte-exact UTF-8 markdown rendering without shell escaping artifacts.
+13. **Local Full-Stack Invariants & Framework Lifecycles**:
+    - **Starlette / FastAPI Jinja2 Template Signature Invariant**: In modern Starlette (`starlette >= 0.36.0` / modern FastAPI), `templates.TemplateResponse` strictly requires `request` as the first argument or keyword argument:
+      ```python
+      templates.TemplateResponse(request=request, name="template.html", context={...})
+      ```
+      Passing `"template.html", {"request": request}` triggers `TypeError: cannot use 'tuple' as a dict key (unhashable type: 'dict')` during Jinja2 template cache lookup.
+    - **SQLite WAL Auxiliary File Exclusion**: When using SQLite Write-Ahead Logging (`PRAGMA journal_mode=WAL`), SQLite generates ephemeral shared memory (`*.db-shm`) and WAL journal (`*.db-wal`) files. All `.gitignore` files must explicitly exclude `*.db-shm`, `*.db-wal`, and `*.db-journal` alongside `*.db` to prevent unversioned binary lock contamination.
+    - **PowerShell `[CmdletBinding()]` Help Parameter Collision**: In `sync.ps1` and developer automation scripts, never declare a manual `[switch]$Help` parameter when the script is decorated with `[CmdletBinding()]`. PowerShell automatically provides built-in `-?` / `-Help` dispatch; declaring a duplicate manual `$Help` switch parameter corrupts argument binding into `Cannot convert value "System.Object[]" to type "System.Management.Automation.SwitchParameter"`.
+    - **Local ASGI Port Collision Avoidance**: When default port `8000` is occupied by system daemons or web proxies, allocate dedicated port `9000` (or `9000+`) across ASGI launchers (`run.bat`, `app/main.py`) to guarantee zero-friction local execution.
 
 ---
 
@@ -441,8 +451,9 @@ gh issue edit <ISSUE_NUMBER> --milestone "<Milestone Title>"
 
 ## 4. Supporting Resources
 
-- **`scripts/toggle_issue_task.py`**: Global task checkbox toggler (aliased to `gh-task` and `toggle-issue-task` in system PATH).
-- **`references/gh-cli-cheatsheet.md`**: Complete reference for `gh issue`, `gh pr`, `gh api` commands.
+- **`scripts/gh.ps1` & `scripts/gh.bat`**: Unified GitHub CLI workflow engine with `gh.exe` binary auto-discovery, non-interactive UTF-8 hardening (`GH_PAGER=""`), automatic `--body` $\to$ `--body-file` interception (`INV-GH-BODY-FILE`), and built-in SOP shortcuts (`issue-create`, `task`, `sub-issue`, `close-verified`). Also deployed at the root of `Fleet-Orchestrator` and `brainstorm`.
+- **`scripts/toggle_issue_task.py`**: Global task checkbox toggler (aliased to `gh-task`, `toggle-issue-task`, and `.\gh.bat task`).
+- **`references/gh-cli-cheatsheet.md`**: Complete reference for `gh.bat` / `gh.ps1`, `gh issue`, `gh pr`, and `gh api` commands.
 - **`references/multi-remote-sync.md`**: Architectural reference for `Makefile`, `make.bat`, `sync.bat`/`sync.ps1`, `sync.sh`, `-SkipCI`, and `-WhatIf`.
 - **`examples/templates.md`**: Issue and PR templates for features, bug fixes, refactors, and research tracks.
 - **Root `Makefile` & `make.bat`**: Universal cross-platform build and synchronization dispatchers.

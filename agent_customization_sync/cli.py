@@ -22,6 +22,8 @@ from agent_customization_sync.manifest import (
 from agent_customization_sync.memory_mirror import mirror_memory
 from agent_customization_sync.snapshot_engine import SnapshotEngine
 from agent_customization_sync.auditor import CustomizationAuditor
+from agent_customization_sync.local_bin_provisioner import LocalBinProvisioner
+from agent_customization_sync.drive_backup import CustomizationDriveBackup, DEFAULT_FOLDER_ID
 from agent_customization_sync.transpilers.rules_transpiler import RulesTranspiler
 from agent_customization_sync.transpilers.mcp_normalizer import MCPNormalizer
 from agent_customization_sync.transpilers.skills_linker import SkillsLinker
@@ -234,6 +236,16 @@ def cmd_push(args: argparse.Namespace) -> int:
         (codex_dir / "AGENTS.md").write_text(rt.transpile_codex(), encoding="utf-8")
         print("[OK] Codex CLI updated: ~/.codex/AGENTS.md")
 
+    # 5. Global CLI Runner Shims (~/.local/bin)
+    if target_all or getattr(args, "local_bin", False):
+        bin_prov = LocalBinProvisioner()
+        p_res = bin_prov.provision(overwrite=True)
+        print(
+            f"[OK] Global CLI shims verified: {p_res['bin_dir']} "
+            f"({len(p_res['created'])} created, {len(p_res['updated'])} updated, "
+            f"{len(p_res['skipped'])} verified, in_path: {p_res['in_path']})"
+        )
+
     print("\n[OK] Push synchronization completed across all designated environments.\n")
     return 0
 
@@ -256,7 +268,21 @@ def cmd_audit(args: argparse.Namespace) -> int:
     print(tb.to_table())
     print()
 
-    return 0 if (drift.in_sync and tb.is_compliant) else (0 if tb.is_compliant else 1)
+    print("========================================================")
+    print(" 3. GLOBAL CLI SHIMS AUDIT (~/.local/bin)")
+    print("========================================================")
+    bin_prov = LocalBinProvisioner()
+    bin_audit = bin_prov.audit()
+    print(f"Directory      : {bin_audit['bin_dir']}")
+    print(f"In System PATH : {'YES' if bin_audit['in_path'] else 'NO (Action required)'}")
+    print(f"Shims Present  : {bin_audit['present_count']} / {bin_audit['total_expected']}")
+    if bin_audit["missing"]:
+        print(f"Missing Shims  : {', '.join(bin_audit['missing'])}")
+    if bin_audit["drifted"]:
+        print(f"Drifted Shims  : {', '.join(bin_audit['drifted'])}")
+    print(f"Status         : {'HEALTHY' if bin_audit['healthy'] else 'DEGRADED (Run custom_sync.bat local-bin --fix)'}\n")
+
+    return 0 if (drift.in_sync and tb.is_compliant and bin_audit["healthy"]) else (0 if tb.is_compliant else 1)
 
 
 def cmd_status(args: argparse.Namespace) -> int:
@@ -275,12 +301,46 @@ def cmd_status(args: argparse.Namespace) -> int:
     print(f"Static Token Cost   : {manifest.total_token_overhead:,} tokens ({manifest.headroom_percent:.1f}% headroom)")
     print(f"Root SHA-256 Digest : {manifest.sha256_root}")
 
+    bin_prov = LocalBinProvisioner()
+    bin_audit = bin_prov.audit()
+    path_status = "OK" if bin_audit["in_path"] else "MISSING"
+    print(f"Global CLI Shims    : {bin_audit['present_count']}/{bin_audit['total_expected']} active in {bin_audit['bin_dir']} (PATH: {path_status})")
+
     snapshots = engine.list_snapshots()
     print(f"Snapshots Available : {len(snapshots)} (Ring buffer capacity: {engine.max_snapshots})")
     if snapshots:
         print(f"Latest Snapshot     : {snapshots[0].snapshot_id} ({snapshots[0].created_at})")
     print("========================================================\n")
     return 0
+
+
+def cmd_drive_backup(args: argparse.Namespace) -> int:
+    try:
+        folder_id = args.folder_id or DEFAULT_FOLDER_ID
+        backup_engine = CustomizationDriveBackup(folder_id=folder_id)
+        backup_engine.run_backup(dry_run=args.dry_run, force=args.force)
+        return 0
+    except Exception as e:
+        print(f"[FAIL] Drive backup failed: {e}", file=sys.stderr)
+        return 1
+
+
+def cmd_local_bin(args: argparse.Namespace) -> int:
+    bin_dir = Path(args.dir) if args.dir else None
+    prov = LocalBinProvisioner(bin_dir=bin_dir)
+    if args.fix:
+        res = prov.provision(overwrite=True)
+        print(f"[OK] Repaired ~/.local/bin shims: {len(res['created'])} created, {len(res['updated'])} updated, {len(res['skipped'])} verified.")
+    audit = prov.audit()
+    print(f"Directory   : {audit['bin_dir']}")
+    print(f"System PATH : {'OK' if audit['in_path'] else 'NOT IN PATH'}")
+    print(f"Shims       : {audit['present_count']}/{audit['total_expected']} active")
+    if audit["missing"]:
+        print(f"Missing     : {', '.join(audit['missing'])}")
+    if audit["drifted"]:
+        print(f"Drifted     : {', '.join(audit['drifted'])}")
+    print(f"Status      : {'HEALTHY' if audit['healthy'] else 'DEGRADED (Run with --fix to repair)'}")
+    return 0 if audit["healthy"] else 1
 
 
 def main(argv: Optional[List[str]] = None) -> int:
@@ -323,6 +383,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     p_push.add_argument("--claude", action="store_true", help="Push to Claude Code CLI")
     p_push.add_argument("--vscode", action="store_true", help="Push to VS Code / Copilot")
     p_push.add_argument("--codex", action="store_true", help="Push to OpenAI Codex CLI")
+    p_push.add_argument("--local-bin", action="store_true", help="Provision and verify global CLI runner shims in ~/.local/bin")
     p_push.add_argument("--workspace", "-w", type=str, help="Workspace directory for project-scoped rules")
     p_push.add_argument("--src", type=str, help="Custom source configuration directory")
     p_push.add_argument("--mode", choices=["junction", "copy"], default="junction", help="Skill synchronization mode")
@@ -337,6 +398,17 @@ def main(argv: Optional[List[str]] = None) -> int:
     p_stat.add_argument("--src", type=str, help="Custom source configuration directory")
     p_stat.add_argument("--snapshot-dir", type=str, help="Custom snapshot storage directory")
 
+    # drive-backup
+    p_drive = subparsers.add_parser("drive-backup", help="Upload latest customization snapshot and shims to Google Drive")
+    p_drive.add_argument("--dry-run", action="store_true", help="Preview backup targets without modifying Drive")
+    p_drive.add_argument("--force", action="store_true", help="Force upload even if remote hash matches")
+    p_drive.add_argument("--folder-id", type=str, help=f"Google Drive destination folder ID (default: {DEFAULT_FOLDER_ID})")
+
+    # local-bin
+    p_lbin = subparsers.add_parser("local-bin", help="Audit or provision global CLI runner shims in ~/.local/bin")
+    p_lbin.add_argument("--fix", action="store_true", help="Repair, create or update missing/drifted shims")
+    p_lbin.add_argument("--dir", type=str, help="Custom local bin directory (default: ~/.local/bin)")
+
     args = parser.parse_args(argv)
     if not args.command:
         parser.print_help()
@@ -350,6 +422,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         "push": cmd_push,
         "audit": cmd_audit,
         "status": cmd_status,
+        "drive-backup": cmd_drive_backup,
+        "local-bin": cmd_local_bin,
     }
     handler = commands.get(args.command)
     if handler:

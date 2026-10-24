@@ -114,12 +114,26 @@ def trigger_cloud_drive_sync() -> None:
         except Exception as e:
             log(f"Google Drive sync skipped or timed out: {e}")
 
+
+def trigger_customization_drive_backup() -> None:
+    """Trigger background Drive backup of customization state and runner shims."""
+    try:
+        from agent_customization_sync.drive_backup import CustomizationDriveBackup
+        log("Triggering Customization Drive cloud backup...")
+        backup_engine = CustomizationDriveBackup()
+        backup_engine.run_backup(dry_run=False, force=False)
+        log("Customization Drive cloud backup finished successfully.")
+    except Exception as e:
+        log(f"Customization Drive cloud backup skipped: {e}")
+
+
 def main() -> int:
     log("=== Starting Unified Ecosystem Memory Sync ===")
     try:
         sync_codex_and_gemini()
         bridge_claude_team_memory()
         trigger_cloud_drive_sync()
+        trigger_customization_drive_backup()
         log("=== Unified Ecosystem Memory Sync Finished Successfully ===")
         return 0
     except Exception as exc:

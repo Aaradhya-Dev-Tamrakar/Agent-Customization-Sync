@@ -47,3 +47,33 @@ def test_cli_snapshot_and_list(mock_config_dir: Path, mock_snapshot_dir: Path, c
     assert ret_list == 0
     list_out = capsys.readouterr()
     assert "ci-test" in list_out.out
+
+
+def test_cli_local_bin(tmp_path: Path, capsys):
+    ret = main([
+        "local-bin",
+        "--fix",
+        "--dir", str(tmp_path),
+    ])
+    assert ret == 0
+    captured = capsys.readouterr()
+    assert "Repaired ~/.local/bin shims" in captured.out
+    assert "10/10 active" in captured.out
+
+
+def test_cli_drive_backup_dry_run(mock_config_dir: Path, mock_snapshot_dir: Path, capsys):
+    # Create snapshot first
+    main([
+        "snapshot",
+        "--tag", "backup-test",
+        "--src", str(mock_config_dir),
+        "--snapshot-dir", str(mock_snapshot_dir),
+    ])
+    capsys.readouterr()
+
+    # Dry-run drive backup
+    ret = main(["drive-backup", "--dry-run"])
+    assert ret == 0
+    captured = capsys.readouterr()
+    assert "Customization Google Drive Cloud Backup" in captured.out
+    assert "DRY-RUN (Preview)" in captured.out
